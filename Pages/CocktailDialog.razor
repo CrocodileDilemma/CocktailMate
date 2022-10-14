@@ -1,0 +1,30 @@
+﻿@inject IDialogService _dialogService
+@inject ISnackbar _snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.LocalDrink" Class="mr-3 mb-n1" />
+            @drink.strDrink
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudCard>
+            <MudCardMedia Image="@drink.strDrinkThumb" Height="200" />
+            <MudCardContent>
+                <MudText Typo="Typo.h5">@drink.strDrink</MudText>
+                <MudText Typo="Typo.body2">@drink.strCategory</MudText>
+                <MudText Typo="Typo.body2">@drink.strGlass</MudText>
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton Variant="Variant.Text" Color="Color.Primary">Share</MudButton>
+                <MudButton Variant="Variant.Text" Color="Color.Primary">Learn More</MudButton>
+            </MudCardActions>
+        </MudCard>
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance dialog { get; set; }
+    [Parameter] public Drink drink { get; set; }
+}
