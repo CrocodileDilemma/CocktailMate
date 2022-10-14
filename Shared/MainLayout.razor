@@ -1,0 +1,83 @@
+﻿@inherits LayoutComponentBase
+@inject CocktailService _service
+@inject ISnackbar _snack
+
+<MudThemeProvider @bind-IsDarkMode="@_darkMode" />
+<MudDialogProvider />
+<MudSnackbarProvider />
+<MudLayout>
+    <MudAppBar Elevation="0" Fixed="true" Dense="true" Color="Color.Surface">
+        <MudText Typo="Typo.h5" Class="ml-3">Cocktail Mate</MudText>
+        <MudTextField T="string" DebounceInterval="500" Variant="Variant.Outlined" Adornment="Adornment.End" Style="height: 32px; color: white"
+            AdornmentIcon="@Icons.Filled.Search" IconSize="Size.Small"  InputMode="InputMode.search" Class="ml-5 mb-2" AdornmentColor="Color.Inherit" 
+            Placeholder="Search" OnAdornmentClick="HandleSearch" @bind-Value="_searchTerm" Immediate="true"/>
+        <MudSpacer />
+        <MudMenu Label="Categories" MaxHeight="600" StartIcon="@Icons.Material.Filled.Collections" Color="Color.Inherit">
+            @foreach (var category in _categories?.drinks.OrderBy(x => x.strCategory))
+            {
+                <MudMenuItem @onclick="@(() => HandleFilter("c", category.strCategory))">@category.strCategory</MudMenuItem>
+            }
+        </MudMenu>
+        <MudMenu Label="Ingredients" MaxHeight="600" StartIcon="@Icons.Material.Filled.Blender" Color="Color.Inherit">
+            @foreach (var ingredient in _ingredients?.drinks.OrderBy(x => x.strIngredient1))
+            {
+                <MudMenuItem @onclick="@(() => HandleFilter("i", ingredient.strIngredient1))">@ingredient.strIngredient1</MudMenuItem>
+            }
+        </MudMenu>
+        <MudMenu Label="Glasses" MaxHeight="600" StartIcon="@Icons.Material.Filled.LocalDrink" Color="Color.Inherit">
+            @foreach (var glass in _glasses?.drinks.OrderBy(x => x.strGlass))
+            {
+                <MudMenuItem @onclick="@(() => HandleFilter("g", glass.strGlass))">@glass.strGlass</MudMenuItem>
+            }
+        </MudMenu>
+        <MudIconButton @onclick="ToggleDarkMode" Color="Color.Inherit" Icon="@_modeIcon" Title="@_modeTitle"/>
+    </MudAppBar>
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.Large" Class="my-4 pt-4">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    private Drinks _glasses = new();
+    private Drinks _ingredients = new();
+    private Drinks _categories = new();
+    private string _modeIcon => _darkMode ? Icons.Outlined.DarkMode : @Icons.Outlined.LightMode;
+    private string _modeTitle => _darkMode ? "Switch to Light Mode" : "Switch to Dark Mode";
+    private bool _darkMode = false;
+    private string _searchTerm = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await _service.GetLists();
+        if (result.IsError)
+        {
+            _snack.Add("Error Loading Lists!", Severity.Error);
+        }
+        else
+        {
+            _glasses = result.Value.First();
+            _categories = result.Value[1];
+            _ingredients = result.Value[2];
+        }
+    }
+
+    private void ToggleDarkMode()
+    {
+        _darkMode = !_darkMode;
+    }
+
+    private async Task HandleSearch()
+    {
+        if (!string.IsNullOrEmpty(_searchTerm))
+        {
+            await _service.PerformSearch(_searchTerm);
+        }
+    }
+
+    private async Task HandleFilter(string endpoint, string searchTerm)
+    {
+        await _service.PerformFilter(endpoint, searchTerm.Replace(" ","_"));
+    }
+}

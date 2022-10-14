@@ -1,0 +1,120 @@
+﻿@page "/"
+@inject CocktailService _service
+@inject NavigationManager _nav
+@inject ISnackbar _snack
+@implements IDisposable
+
+<MudOverlay Visible="_spinnerVisible" DarkBackground="false" Absolute="true" >
+    <MudProgressLinear Color="Color.Secondary" Indeterminate="true" Size="Size.Large" />
+</MudOverlay>
+
+<PageTitle>Cocktail Mate</PageTitle>
+<MudText Typo="Typo.h3" GutterBottom="true" Align="Align.Center">Welcome to Cocktail Mate!</MudText>
+<MudText Class="mb-8" Align="Align.Center">Fancy a tipple? Search for a cocktail, use one of the filters, or <MudLink Href="#">choose one at random</MudLink></MudText>
+
+@if (_service?.CocktailSearch?.drinks?.Any() is true)
+{
+    <MudGrid>
+        @foreach (var drink in _service.CocktailSearch?.drinks)
+        {
+            <MudItem xs="6">
+                <MudCard>
+                    <MudCardMedia Image="@drink.strDrinkThumb" Height="200" />
+                    <MudCardContent>
+                        <MudText Typo="Typo.h5">@drink.strDrink</MudText>
+                        <MudText Typo="Typo.body2">@drink.strCategory</MudText>
+                        <MudText Typo="Typo.body2">@drink.strGlass</MudText>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton Variant="Variant.Text" Color="Color.Primary">Share</MudButton>
+                        <MudButton Variant="Variant.Text" Color="Color.Primary">Learn More</MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
+}
+else
+{
+    <MudCarousel Class="mud-width-full" Style="height:200px;" ShowArrows="true" EnableSwipeGesture="@true" AutoCycle="@true" TData="Drink">
+        <MudCarouselItem Transition="Transition.Slide" Color="@Color.Primary">
+            <div class="d-flex" style="height:100%">
+                <div class="d-flex justify-center">
+                    <MudImage ObjectFit="ObjectFit.Cover" Height="200" Width="400" Src="@_randomOne?.drinks?.FirstOrDefault()?.strDrinkThumb"
+                              Alt=@_randomOne?.drinks?.FirstOrDefault()?.strDrink Elevation="25" Class="rounded-lg" />
+                    <MudText Align="@Align.Center" Class="mx-auto"></MudText>
+                </div>        
+            </div>
+        </MudCarouselItem>
+        <MudCarouselItem Transition="Transition.Fade" Color="@Color.Secondary">
+            <div class="d-flex" style="height:100%">
+                <MudImage Src="@_randomTwo?.drinks?.FirstOrDefault()?.strDrinkThumb" Width="200" Height="150" Elevation="25" Class="rounded-lg mx-auto" />
+                <MudText Align="@Align.Center" Class="mx-auto">@_randomTwo?.drinks?.FirstOrDefault()?.strDrink</MudText>
+            </div>
+        </MudCarouselItem>
+        <MudCarouselItem Transition="Transition.Slide">
+            <div class="d-flex" style="height:100%">
+                <MudImage Src="@_randomThree?.drinks?.FirstOrDefault()?.strDrinkThumb" Width="200" Height="150" Elevation="25" Class="rounded-lg mx-auto" />
+                <MudText Align="@Align.Center" Class="mx-auto">@_randomThree?.drinks?.FirstOrDefault()?.strDrink</MudText>
+            </div>
+        </MudCarouselItem>
+    </MudCarousel>
+}
+
+@code {
+    private Drinks _randomOne = new();
+    private Drinks _randomTwo = new();
+    private Drinks _randomThree = new();
+    private string _searchTerm = string.Empty;
+    private bool _spinnerVisible { get; set; } = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _service.OnShowSpinner += ShowSpinner;
+        _service.OnHideSpinner += HideSpinner;
+        _service.OnSearchPerformed += HandleSearch;
+
+        var result = await _service.GetRandomDrinks(3);
+        if (result.IsError)
+        {
+            _snack.Add("Could not load Random Cocktails", Severity.Warning);
+        }
+        else
+        {
+            _randomOne.drinks.Add(result.Value.drinks.First());
+            _randomTwo.drinks.Add(result.Value.drinks[1]);
+            _randomThree.drinks.Add(result.Value.drinks[2]);
+        }
+
+        HideSpinner();
+    }
+
+    private void HandleSearch()
+    {
+        if (!string.IsNullOrEmpty(_service.SearchError))
+        {
+            _snack.Add(_service.SearchError, Severity.Warning);
+        }
+
+        StateHasChanged();
+    }
+
+    protected void ShowSpinner()
+    {
+        _spinnerVisible = true;
+        StateHasChanged();
+    }
+
+    protected void HideSpinner()
+    {
+        _spinnerVisible = false;
+        StateHasChanged();
+    }
+
+    void IDisposable.Dispose()
+    {
+        _service.OnShowSpinner -= ShowSpinner;
+        _service.OnHideSpinner -= HideSpinner;
+        _service.OnSearchPerformed -= HandleSearch;
+    }
+}
