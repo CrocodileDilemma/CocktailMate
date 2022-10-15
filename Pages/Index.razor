@@ -39,34 +39,39 @@
 else
 {
     <MudCarousel Class="mud-width-full" Style="height:200px;" ShowArrows="true" EnableSwipeGesture="@true" AutoCycle="@true" TData="Drink">
-        <MudCarouselItem Transition="Transition.Slide" Color="@Color.Primary">
-            <div class="d-flex" style="height:100%">
-                <div class="d-flex justify-center">
-                    <MudImage ObjectFit="ObjectFit.Cover" Height="200" Width="400" Src="@_randomOne?.drinks?.FirstOrDefault()?.strDrinkThumb"
-                              Alt=@_randomOne?.drinks?.FirstOrDefault()?.strDrink Elevation="25" Class="rounded-lg" />
-                    <MudText Align="@Align.Center" Class="mx-auto"></MudText>
-                </div>        
-            </div>
-        </MudCarouselItem>
-        <MudCarouselItem Transition="Transition.Fade" Color="@Color.Secondary">
-            <div class="d-flex" style="height:100%">
-                <MudImage Src="@_randomTwo?.drinks?.FirstOrDefault()?.strDrinkThumb" Width="200" Height="150" Elevation="25" Class="rounded-lg mx-auto" />
-                <MudText Align="@Align.Center" Class="mx-auto">@_randomTwo?.drinks?.FirstOrDefault()?.strDrink</MudText>
-            </div>
-        </MudCarouselItem>
-        <MudCarouselItem Transition="Transition.Slide">
-            <div class="d-flex" style="height:100%">
-                <MudImage Src="@_randomThree?.drinks?.FirstOrDefault()?.strDrinkThumb" Width="200" Height="150" Elevation="25" Class="rounded-lg mx-auto" />
-                <MudText Align="@Align.Center" Class="mx-auto">@_randomThree?.drinks?.FirstOrDefault()?.strDrink</MudText>
-            </div>
-        </MudCarouselItem>
+        @foreach (var drink in _randomCocktails?.drinks)
+        {
+            <MudCarouselItem Transition="Transition.Slide" Color="@Color.Primary">
+                <div class="d-flex" style="height:100%">
+                    <div class="d-flex justify-center">
+                        <MudImage ObjectFit="ObjectFit.Cover" Height="200" Width="400" Src="@drink.strDrinkThumb"
+                          Alt=@drink.strDrink Elevation="25" Class="rounded-lg" />
+                        <MudText Align="@Align.Center" Class="mx-auto">@drink.strDrink</MudText>
+                    </div>
+                </div>
+            </MudCarouselItem>
+        }
+    </MudCarousel>
+
+    <MudCarousel Class="mud-width-full" Style="height:200px;" ShowArrows="true" EnableSwipeGesture="@true" AutoCycle="@true" TData="Ingredient">
+        @foreach (var ingredient in _randomIngredients)
+        {
+            <MudCarouselItem Transition="Transition.Slide" Color="@Color.Primary">
+                <div class="d-flex" style="height:100%">
+                    <div class="d-flex justify-center">
+                        <MudImage ObjectFit="ObjectFit.Cover" Height="200" Width="400" Src="@_service.GetIngredientImage(ingredient)"
+                          Alt=@ingredient Elevation="25" Class="rounded-lg" />
+                        <MudText Align="@Align.Center" Class="mx-auto">@ingredient</MudText>
+                    </div>
+                </div>
+            </MudCarouselItem>
+        }
     </MudCarousel>
 }
 
 @code {
-    private Drinks _randomOne = new();
-    private Drinks _randomTwo = new();
-    private Drinks _randomThree = new();
+    private Drinks _randomCocktails = new();
+    private List<string> _randomIngredients = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -79,10 +84,10 @@ else
         }
         else
         {
-            _randomOne.drinks.Add(result.Value.drinks.First());
-            _randomTwo.drinks.Add(result.Value.drinks[1]);
-            _randomThree.drinks.Add(result.Value.drinks[2]);
+            _randomCocktails = result.Value;
         }
+
+        _randomIngredients = _service.GetRandomIngredients(3);
     }
 
     private void HandleSearch()

@@ -12,7 +12,7 @@
             <MudCardContent>
                 <MudGrid>
                     <MudItem xs="3">
-                        <MudImage Src="@ingredientImage" Height="200" ObjectFit="ObjectFit.Cover" ObjectPosition="ObjectPosition.Bottom" Class="rounded-lg" />
+                        <MudImage Src="@_service.GetIngredientImage(ingredient.strIngredient)" Height="200" ObjectFit="ObjectFit.Cover" ObjectPosition="ObjectPosition.Bottom" Class="rounded-lg" />
                     </MudItem>
                     <MudItem xs="9">
                             @if (!string.IsNullOrEmpty(ingredient.strType))
@@ -46,10 +46,4 @@
 @code {
     [CascadingParameter] MudDialogInstance dialog { get; set; }
     [Parameter] public Ingredient ingredient { get; set; }
-    private string ingredientImage { get; set; } = string.Empty;
-
-    protected override void OnParametersSet()
-    {
-       ingredientImage = $"https://www.thecocktaildb.com/images/ingredients/{ingredient.strIngredient}-Medium.png";
-    }
 }

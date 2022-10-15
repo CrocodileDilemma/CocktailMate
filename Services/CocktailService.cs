@@ -1,6 +1,7 @@
 ﻿using ErrorOr;
-using Microsoft.AspNetCore.Components;
+using System.ComponentModel;
 using System.Net.Http.Json;
+using System.Security.Cryptography;
 using UltimateCocktails.Models;
 
 namespace UltimateCocktails.Services
@@ -8,6 +9,9 @@ namespace UltimateCocktails.Services
     public class CocktailService
     {
         public Drinks CocktailSearch { get; set; } = new();
+        public Drinks IngredientsList = new();
+        public Drinks GlassesList = new();
+        public Drinks CategoriesList = new();
         public string SearchError { get; set; } = string.Empty;
         private readonly HttpClient _httpClient;
 
@@ -89,19 +93,37 @@ namespace UltimateCocktails.Services
             }
         }
 
-        public async Task<ErrorOr<List<Drinks>>> GetLists()
+        public List<string> GetRandomIngredients(int count)
+        {
+            List<string> result = new();
+            int max = IngredientsList.drinks.Count;
+            if (max > 0)
+            {
+                int[] ints = new int[count];
+                int i = 0;
+
+                while (i < count)
+                {
+                    int randomInt = RandomNumberGenerator.GetInt32(0, max - 1);
+                    if (!ints.Contains(randomInt))
+                    {
+                        result.Add(IngredientsList.drinks.ElementAt<Drink>(randomInt).strIngredient1);
+                        ints[i] = randomInt;
+                        i++;
+                    }
+                }
+            }
+
+            return result;
+        }
+        public async Task <ErrorOr<bool>> LoadLists()
         {
             try
             {
-                List<Drinks> result = new List<Drinks>();
-
-                foreach (string endpoint in new string[] { "g", "c", "i" })
-                {
-                    var drink = await _httpClient.GetFromJsonAsync<Drinks>($"list.php?{endpoint}=list");
-                    result.Add(drink);
-                }
-
-                return result;
+                IngredientsList = await _httpClient.GetFromJsonAsync<Drinks>("list.php?i=list");
+                GlassesList = await _httpClient.GetFromJsonAsync<Drinks>("list.php?g=list");
+                CategoriesList = await _httpClient.GetFromJsonAsync<Drinks>("list.php?c=list");
+                return true;
             }
             catch (Exception ex)
             {
@@ -143,6 +165,11 @@ namespace UltimateCocktails.Services
             {
                 return Error.Failure(description: ex.Message);
             }
+        }
+
+        public string GetIngredientImage(string ingredient)
+        {
+            return $"https://www.thecocktaildb.com/images/ingredients/{ingredient}-Medium.png";
         }
 
         private void NotifyStateChanged() => OnSearchPerformed?.Invoke();

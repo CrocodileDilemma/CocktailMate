@@ -12,6 +12,6 @@
 
     public sealed record Ingredients
     {
-        public List<Ingredient> ingredients { get; set; }
+        public List<Ingredient> ingredients { get; set; } = new();
     }
 }
