@@ -1,12 +1,13 @@
 ﻿@inherits LayoutComponentBase
 @inject CocktailService _service
 @inject ISnackbar _snack
+@implements IDisposable
 
-<MudThemeProvider @bind-IsDarkMode="@_darkMode" />
+<MudThemeProvider @bind-IsDarkMode="@_darkMode" Theme= "@_theme"/>
 <MudDialogProvider />
 <MudSnackbarProvider />
 <MudLayout>
-    <MudAppBar Elevation="0" Fixed="true" Dense="true" Color="Color.Surface">
+    <MudAppBar Elevation="0" Fixed="true" Dense="true" Color="Color.Inherit">
         <MudText Typo="Typo.h5" Class="ml-3">Cocktail Mate</MudText>
         <MudTextField T="string" DebounceInterval="500" Variant="Variant.Outlined" Adornment="Adornment.End" Style="height: 32px; color: white"
             AdornmentIcon="@Icons.Filled.Search" IconSize="Size.Small"  InputMode="InputMode.search" Class="ml-5 mb-2" AdornmentColor="Color.Inherit" 
@@ -47,9 +48,21 @@
     private string _modeTitle => _darkMode ? "Switch to Light Mode" : "Switch to Dark Mode";
     private bool _darkMode = false;
     private string _searchTerm = string.Empty;
+    private MudTheme _theme = new MudTheme()
+    {
+        Typography = new Typography()
+        {
+            Default = new Default()
+            {
+                FontFamily = new[] { "Poppins", "Helvetica", "Arial", "sans-serif" }
+            }
+        }     
+    };
 
     protected override async Task OnInitializedAsync()
     {
+        _service.OnSearchPerformed += SearchHandled;
+
         var result = await _service.GetLists();
         if (result.IsError)
         {
@@ -79,5 +92,18 @@
     private async Task HandleFilter(string endpoint, string searchTerm)
     {
         await _service.PerformFilter(endpoint, searchTerm.Replace(" ","_"));
+    }
+
+    private void SearchHandled()
+    {
+        if (string.IsNullOrEmpty(_service.SearchError))
+        {
+            _searchTerm = string.Empty;
+        }
+    }
+
+    void IDisposable.Dispose()
+    {
+        _service.OnSearchPerformed -= SearchHandled;
     }
 }

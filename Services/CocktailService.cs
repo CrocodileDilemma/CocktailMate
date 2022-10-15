@@ -26,11 +26,15 @@ namespace UltimateCocktails.Services
 
             try
             {
-                CocktailSearch = await _httpClient.GetFromJsonAsync<Drinks>($"search.php?s={ searchQuery }");
+                var result = await _httpClient.GetFromJsonAsync<Drinks>($"search.php?s={ searchQuery }");
                 
-                if (CocktailSearch?.drinks?.Any() is not true)
+                if (result?.drinks?.Any() is not true)
                 {
                     SearchError = $"No Cocktails were found matching your search term!";
+                }
+                else
+                {
+                    CocktailSearch.drinks = result.drinks.OrderBy(x => x.strDrink).ToList();
                 }
             }
             catch (Exception ex)
@@ -47,10 +51,14 @@ namespace UltimateCocktails.Services
             
             try
             {
-                CocktailSearch = await _httpClient.GetFromJsonAsync<Drinks>($"filter.php?{ filterBy }={ filterValue }");
-                if (CocktailSearch?.drinks?.Any() is not true)
+                var result = await _httpClient.GetFromJsonAsync<Drinks>($"filter.php?{ filterBy }={ filterValue }");
+                if (result?.drinks?.Any() is not true)
                 {
                     SearchError = $"No { filterValue } Cocktails were found!";
+                }
+                else
+                {
+                    CocktailSearch.drinks = result.drinks.OrderBy(x => x.strDrink).ToList();
                 }
             }
             catch (Exception ex)
@@ -94,6 +102,42 @@ namespace UltimateCocktails.Services
                 }
 
                 return result;
+            }
+            catch (Exception ex)
+            {
+                return Error.Failure(description: ex.Message);
+            }
+        }
+
+        public async Task<ErrorOr<Drink>> GetDrink(string id)
+        {
+            try
+            {
+                var result = await _httpClient.GetFromJsonAsync<Drinks>($"lookup.php?i={ id }");
+                if (result?.drinks?.Any() is true)
+                {
+                    return result.drinks.First();
+                }
+
+                return Error.Validation(description: $"Could not load details for Cocktail with ID: {id}");
+            }
+            catch (Exception ex)
+            {
+                return Error.Failure(description: ex.Message);
+            }
+        }
+
+        public async Task<ErrorOr<Ingredient>> GetIngredient(string ingredient)
+        {
+            try
+            {
+                var result = await _httpClient.GetFromJsonAsync<Ingredients>($"search.php?i={ingredient}");
+                if (result?.ingredients?.Any() is true)
+                {
+                    return result.ingredients.First();
+                }
+
+                return Error.Validation(description: $"Could not load details for Ingredient: {ingredient}");
             }
             catch (Exception ex)
             {

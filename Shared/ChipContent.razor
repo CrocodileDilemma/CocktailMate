@@ -1,0 +1,42 @@
+﻿<MudText Typo="Typo.subtitle1">Info</MudText>
+@if (!string.IsNullOrEmpty(drink.strCategory))
+{
+    <MudChip DisableRipple="true" Color="Color.Primary">@drink.strCategory</MudChip>
+}
+@if (!string.IsNullOrEmpty(drink.strGlass))
+{
+    <MudChip DisableRipple="true" Color="Color.Primary">@drink.strGlass</MudChip>
+}
+@if (!string.IsNullOrEmpty(drink.strAlcoholic))
+{
+    <MudChip DisableRipple="true" Color="Color.Primary">@drink.strAlcoholic</MudChip>
+}
+@if (!string.IsNullOrEmpty(drink.strIBA))
+{
+    <MudChip DisableRipple="true" Color="Color.Primary">@drink.strIBA</MudChip>
+}
+@if (!string.IsNullOrEmpty(drink.strTags))
+{
+    foreach (string tag in drink.strTags?.Split(','))
+    {
+        <MudChip DisableRipple="true" Color="Color.Info">@GetTagValue(tag)</MudChip>
+    }
+}
+@if (!string.IsNullOrEmpty(drink.strDrinkAlternate))
+{
+    <MudChip DisableRipple="true" Color="Color.Surface">@drink.strDrinkAlternate</MudChip>
+}
+@if (!string.IsNullOrEmpty(drink.strVideo))
+{
+    <MudChip Href="@drink.strVideo" Target="blank" Color="Color.Surface">Watch Vide</MudChip>
+}
+
+@code {
+    [Parameter] public Drink drink { get; set; }
+
+    private string GetTagValue(string tag)
+    {
+        return System.Text.RegularExpressions.Regex.Replace(tag,
+            "([a-z](?=[A-Z]|[0-9])|[A-Z](?=[A-Z][a-z]|[0-9])|[0-9](?=[^0-9]))", "$1 ");
+    }
+}

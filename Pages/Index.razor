@@ -5,10 +5,6 @@
 @inject IDialogService _dialogService
 @implements IDisposable
 
-<MudOverlay Visible="_spinnerVisible" DarkBackground="false" Absolute="true"> 
-    <MudProgressLinear Color="Color.Secondary" Indeterminate="true" Size="Size.Large" />
-</MudOverlay>
-
 <PageTitle>Cocktail Mate</PageTitle>
 <MudText Typo="Typo.h3" GutterBottom="true" Align="Align.Center">Welcome to Cocktail Mate!</MudText>
 <MudText Class="mb-8" Align="Align.Center">Fancy a tipple? Search for a cocktail, use one of the filters, or 
@@ -22,15 +18,19 @@
         {
             <MudItem xs="6">
                 <MudCard>
-                    <MudCardMedia Image="@drink.strDrinkThumb" Height="200" />
-                    <MudCardContent>
-                        <MudText Typo="Typo.h5">@drink.strDrink</MudText>
-                        <MudText Typo="Typo.body2">@drink.strCategory</MudText>
-                        <MudText Typo="Typo.body2">@drink.strGlass</MudText>
-                    </MudCardContent>
-                    <MudCardActions>
-                        <MudButton OnClick="@(() => HandleDialog(drink))" Variant="Variant.Text" Color="Color.Primary">How do I make this?</MudButton>
-                    </MudCardActions>
+                    <MudCardHeader>
+                        <CardHeaderAvatar>
+                            <MudAvatar Color="Color.Primary">@drink.strDrink.Substring(0,1).ToUpper()</MudAvatar>
+                        </CardHeaderAvatar>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.body1">@drink.strDrink</MudText>
+                        </CardHeaderContent>
+                        <CardHeaderActions>
+                                <MudIconButton Icon="@Icons.Material.Filled.QuestionMark" Color="Color.Default" 
+                                OnClick="@(() => HandleDialog(drink))" Title="How do I make this?" />
+                        </CardHeaderActions>
+                    </MudCardHeader>
+                    <MudCardMedia Image="@drink.strDrinkThumb" Height="250" />
                 </MudCard>
             </MudItem>
         }
@@ -67,13 +67,9 @@ else
     private Drinks _randomOne = new();
     private Drinks _randomTwo = new();
     private Drinks _randomThree = new();
-    private string _searchTerm = string.Empty;
-    private bool _spinnerVisible { get; set; } = true;
 
     protected override async Task OnInitializedAsync()
     {
-        _service.OnShowSpinner += ShowSpinner;
-        _service.OnHideSpinner += HideSpinner;
         _service.OnSearchPerformed += HandleSearch;
 
         var result = await _service.GetRandomDrinks(3);
@@ -87,8 +83,6 @@ else
             _randomTwo.drinks.Add(result.Value.drinks[1]);
             _randomThree.drinks.Add(result.Value.drinks[2]);
         }
-
-        HideSpinner();
     }
 
     private void HandleSearch()
@@ -116,30 +110,23 @@ else
         }
     }
 
-    private void HandleDialog(Drink drink)
+    private async Task HandleDialog(Drink drink)
     {
+        var result = await _service.GetDrink(drink.idDrink);
+        if (result.IsError)
+        {
+            _snack.Add(result.FirstError.Description, Severity.Error);
+            return;
+        }
+        
         var parameters = new DialogParameters();
-        parameters.Add("Drink", drink);
-        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraExtraLarge };
-        _dialogService.Show<CocktailDialog>(drink.strDrink, parameters, options);
-    }
-
-    protected void ShowSpinner()
-    {
-        _spinnerVisible = true;
-        StateHasChanged();
-    }
-
-    protected void HideSpinner()
-    {
-        _spinnerVisible = false;
-        StateHasChanged();
+        parameters.Add("Drink", result.Value);
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
+        _dialogService.Show<CocktailDialog>(result.Value.strDrink, parameters, options);
     }
 
     void IDisposable.Dispose()
     {
-        _service.OnShowSpinner -= ShowSpinner;
-        _service.OnHideSpinner -= HideSpinner;
         _service.OnSearchPerformed -= HandleSearch;
     }
 }

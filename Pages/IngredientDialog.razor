@@ -1,0 +1,55 @@
+﻿@inject CocktailService _service
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Blender" Class="mr-3 mb-n1" />
+            @ingredient.strIngredient
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudCard>
+            <MudCardContent>
+                <MudGrid>
+                    <MudItem xs="3">
+                        <MudImage Src="@ingredientImage" Height="200" ObjectFit="ObjectFit.Cover" ObjectPosition="ObjectPosition.Bottom" Class="rounded-lg" />
+                    </MudItem>
+                    <MudItem xs="9">
+                            @if (!string.IsNullOrEmpty(ingredient.strType))
+                            {
+                                <MudChip DisableRipple="true" Color="Color.Primary">@ingredient.strType</MudChip>
+                            }
+                            @if (!string.IsNullOrEmpty(ingredient.strABV))
+                            {
+                                <MudChip DisableRipple="true" Color="Color.Secondary">@($"ABV: { ingredient.strABV }")</MudChip>
+                            }
+                            @if (!string.IsNullOrEmpty(ingredient.strAlcohol))
+                            {
+                                if (ingredient.strAlcohol.ToUpper() == "YES")
+                                {
+                                    <MudChip DisableRipple="true" Color="Color.Success">Alcoholic</MudChip>
+                                }
+                                else
+                                {
+                                    <MudChip DisableRipple="true" Color="Color.Error">Non-Alcoholic</MudChip>
+                                }
+                            }
+                        <MudTextField Label="Description" T="string" Variant="Variant.Outlined" Lines="10" ReadOnly="true" DisableUnderLine="true" FullWidth="true"
+                            Text="@(string.IsNullOrEmpty(ingredient.strDescription) ? ingredient.strIngredient : ingredient.strDescription)" />
+                    </MudItem>
+                </MudGrid>      
+            </MudCardContent>
+        </MudCard>
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance dialog { get; set; }
+    [Parameter] public Ingredient ingredient { get; set; }
+    private string ingredientImage { get; set; } = string.Empty;
+
+    protected override void OnParametersSet()
+    {
+       ingredientImage = $"https://www.thecocktaildb.com/images/ingredients/{ingredient.strIngredient}-Medium.png";
+    }
+}

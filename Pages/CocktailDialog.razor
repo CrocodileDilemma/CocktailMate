@@ -1,5 +1,6 @@
 ﻿@inject IDialogService _dialogService
-@inject ISnackbar _snackbar
+@inject ISnackbar _snack
+@inject CocktailService _service
 
 <MudDialog>
     <TitleContent>
@@ -10,16 +11,24 @@
     </TitleContent>
     <DialogContent>
         <MudCard>
-            <MudCardMedia Image="@drink.strDrinkThumb" Height="200" />
             <MudCardContent>
-                <MudText Typo="Typo.h5">@drink.strDrink</MudText>
-                <MudText Typo="Typo.body2">@drink.strCategory</MudText>
-                <MudText Typo="Typo.body2">@drink.strGlass</MudText>
+                <MudGrid>
+                    <MudItem xs="3">
+                        <MudImage Src="@drink.strDrinkThumb" Height="200" ObjectFit="ObjectFit.Cover" Class="rounded-lg" ObjectPosition="ObjectPosition.Bottom"/>
+                    </MudItem>
+                    <MudItem xs="9">
+                        <ChipContent Drink=@drink />
+                        <MudText Typo="Typo.subtitle1">Ingredients</MudText>
+                        @foreach (var i in ingredients)
+                        {
+                            <MudChip Icon="@Icons.Material.Filled.Info" Color="Color.Secondary" OnClick="@(() => HandleIngredient(i.Key))">@GetIngredient(i)</MudChip>
+                        }
+                    </MudItem>
+                </MudGrid>
+                <MudText Typo="Typo.subtitle1">Instructions</MudText>
+                <MudTextField T="string" Variant="Variant.Outlined" Text="@drink.strInstructions" Lines="8"
+                    ReadOnly="true" DisableUnderLine="true"/>
             </MudCardContent>
-            <MudCardActions>
-                <MudButton Variant="Variant.Text" Color="Color.Primary">Share</MudButton>
-                <MudButton Variant="Variant.Text" Color="Color.Primary">Learn More</MudButton>
-            </MudCardActions>
         </MudCard>
     </DialogContent>
 </MudDialog>
@@ -27,4 +36,44 @@
 @code {
     [CascadingParameter] MudDialogInstance dialog { get; set; }
     [Parameter] public Drink drink { get; set; }
+    private Dictionary<string, string> ingredients = new();
+
+    protected override void OnParametersSet()
+    {
+        for (int i = 1; i <= 15; i++) 
+        {
+            var ingredient = drink.GetType().GetProperty($"strIngredient{i}").GetValue(drink, null);
+            var measure = drink.GetType().GetProperty($"strMeasure{i}").GetValue(drink, null);
+
+            if (ingredient is not null)
+            {
+                ingredients.Add(ingredient.ToString(), measure?.ToString());
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
+
+    private string GetIngredient(KeyValuePair<string, string> ingredient)
+    {
+        return string.IsNullOrEmpty(ingredient.Value) ? ingredient.Key :
+            $"{ingredient.Key} : {ingredient.Value}";
+    }
+
+    private async Task HandleIngredient(string ingredient)
+    {
+        var result = await _service.GetIngredient(ingredient);
+        if (result.IsError)
+        {
+            _snack.Add(result.FirstError.Description, Severity.Error);
+            return;
+        }
+
+        var parameters = new DialogParameters();
+        parameters.Add("Ingredient", result.Value);
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
+        _dialogService.Show<IngredientDialog>(result.Value.strIngredient, parameters, options);
+    }
 }
