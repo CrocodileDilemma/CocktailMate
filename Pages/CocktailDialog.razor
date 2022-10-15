@@ -59,7 +59,7 @@
     private string GetIngredient(KeyValuePair<string, string> ingredient)
     {
         return string.IsNullOrEmpty(ingredient.Value) ? ingredient.Key :
-            $"{ingredient.Key} : {ingredient.Value}";
+            $"{ingredient.Value} {ingredient.Key}";
     }
 
     private async Task HandleIngredient(string ingredient)
