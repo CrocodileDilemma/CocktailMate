@@ -17,7 +17,7 @@
                         <MudImage Src="@drink.strDrinkThumb" Height="200" ObjectFit="ObjectFit.Cover" Class="rounded-lg" ObjectPosition="ObjectPosition.Bottom"/>
                     </MudItem>
                     <MudItem xs="9">
-                        <MudText Typo="Typo.subtitle1">Info</MudText>
+                        <MudText Typo="Typo.subtitle1">Information</MudText>
                         <ChipContent Drink=@drink />
                         <MudText Typo="Typo.subtitle1">Ingredients</MudText>
                         @foreach (var i in ingredients)
@@ -27,8 +27,9 @@
                     </MudItem>
                 </MudGrid>
                 <MudText Typo="Typo.subtitle1">Instructions</MudText>
-                <MudTextField T="string" Variant="Variant.Outlined" Text="@drink.strInstructions" Lines="8"
-                    ReadOnly="true" DisableUnderLine="true"/>
+                <MudPaper Class="mud-width-full" Outlined="true">
+                    <MudAlert Severity="Severity.Success" NoIcon="true">@drink.strInstructions.Replace(". ", ".\r\n") </MudAlert>
+                </MudPaper>
             </MudCardContent>
         </MudCard>
     </DialogContent>

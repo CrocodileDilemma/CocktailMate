@@ -12,7 +12,7 @@ namespace UltimateCocktails.Services
         public Drinks IngredientsList = new();
         public Drinks GlassesList = new();
         public Drinks CategoriesList = new();
-        public Drink RandomCocktail = new();
+        public Drink CurrentCocktail = new();
 
         public string SearchError { get; set; } = string.Empty;
         private readonly HttpClient _httpClient;
@@ -24,12 +24,12 @@ namespace UltimateCocktails.Services
 
         public event Action OnSearchPerformed;
         public event Action OnRandomSearchPerformed;
-        //public event Action OnShowSpinner;
-        //public event Action OnHideSpinner;
+        public event Action OnSearchStarted;
 
         public async Task PerformSearch(string searchQuery)
         {
             SearchError = string.Empty;
+            OnSearchStarted?.Invoke();
 
             try
             {
@@ -55,6 +55,7 @@ namespace UltimateCocktails.Services
         public async Task PerformRandomSearch()
         {
             SearchError = string.Empty;
+            OnSearchStarted?.Invoke();
 
             try
             {
@@ -66,7 +67,33 @@ namespace UltimateCocktails.Services
                 }
                 else
                 {
-                    RandomCocktail = result.Value.drinks.FirstOrDefault();
+                    CurrentCocktail = result.Value.drinks.FirstOrDefault();
+                }
+            }
+            catch (Exception ex)
+            {
+                SearchError = ex.Message;
+            }
+
+            OnRandomSearchPerformed?.Invoke();
+        }
+
+        public async Task PerformÇocktailGet(string drinkId)
+        {
+            SearchError = string.Empty;
+            OnSearchStarted?.Invoke();
+
+            try
+            {
+                var result = await this.GetDrink(drinkId);
+
+                if (result.IsError)
+                {
+                    SearchError = result.FirstError.Description;
+                }
+                else
+                {
+                    CurrentCocktail = result.Value;
                 }
             }
             catch (Exception ex)
@@ -80,7 +107,8 @@ namespace UltimateCocktails.Services
         public async Task PerformFilter(string filterBy, string filterValue, string endpoint = "filter")
         {
             SearchError = string.Empty;
-            
+            OnSearchStarted?.Invoke();
+
             try
             {
                 var result = await _httpClient.GetFromJsonAsync<Drinks>($"{ endpoint }.php?{ filterBy }={ filterValue }");
@@ -215,7 +243,7 @@ namespace UltimateCocktails.Services
                 var ingredient = drink.GetType().GetProperty($"strIngredient{i}").GetValue(drink, null);
                 var measure = drink.GetType().GetProperty($"strMeasure{i}").GetValue(drink, null);
 
-                if (ingredient is not null)
+                if (ingredient is not null && !result.ContainsKey(ingredient.ToString()))
                 {
                     result.Add(ingredient.ToString(), measure?.ToString());
                 }

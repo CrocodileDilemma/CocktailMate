@@ -5,19 +5,46 @@
 @inject IDialogService _dialogService
 @implements IDisposable
 
-<PageTitle>Cocktail Mate</PageTitle>
-<MudText Typo="Typo.h3" GutterBottom="true" Align="Align.Center">Welcome to Cocktail Mate!</MudText>
-<MudText Class="mb-8" Align="Align.Center">Fancy a tipple? Search for a cocktail, use one of the filters, or 
-    <MudLink @onclick="PerformRandomSearch" Class="cursor-pointer">choose one at random</MudLink>
-</MudText>
-
-@if (_service?.CocktailSearch?.drinks?.Any() is true)
+@if (_service?.CocktailSearch?.drinks?.Any() is not true)
 {
+    <PageTitle>Cocktail Mate</PageTitle>
+    <MudText Typo="Typo.h3" GutterBottom="true" Align="Align.Center">Welcome to Cocktail Mate!</MudText>
+    <MudText Class="mb-8" Align="Align.Center">
+        Fancy a tipple? Search for a cocktail, use one of the filters, or
+        <MudLink @onclick="PerformRandomSearch" Class="cursor-pointer">choose one at random</MudLink>
+    </MudText>
+}
+
+@if (_showLoading)
+{
+    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="200px" />
+    <MudCardContent>
+        <MudSkeleton Width="30%" Height="42px;" />
+        <MudSkeleton Width="80%" />
+        <MudSkeleton Width="100%" />
+    </MudCardContent>
+    <MudCardActions>
+        <MudSkeleton Width="64px" Height="40px" Class="ml-2" />
+        <MudSkeleton Width="105px" Height="40px" Class="ml-3" />
+    </MudCardActions>
+    <MudOverlay Visible="_showLoading" ZIndex="9999">
+        <MudProgressCircular Color="Color.Secondary" Indeterminate="true" />
+    </MudOverlay>
+}
+else if (_service?.CocktailSearch?.drinks?.Any() is true)
+{
+    <MudText Class="mb-8" Align="Align.Center">
+        Search Result returned <MudElement HtmlTag="a"
+                                       Class="ma-0"
+                                       Style="color:blue;font-weight:bold;">
+            @_service?.CocktailSearch?.drinks.Count
+        </MudElement> results.
+    </MudText>
     <MudGrid>
         @foreach (var drink in _service.CocktailSearch?.drinks)
         {
-            <MudItem xs="6">
-                <MudCard @onclick="@(()=> HandleDialog(drink))" Class="cursor-pointer">
+            <MudItem xs="6"> 
+                <MudCard @onclick="@(()=> HandleGetDrink(drink.idDrink))" Class="cursor-pointer" Elevation="5" Outlined="true">
                     <MudCardHeader>
                         <CardHeaderAvatar>
                             <MudAvatar Color="Color.Primary">@drink.strDrink.Substring(0,1).ToUpper()</MudAvatar>
@@ -85,11 +112,13 @@ else
 }
 @code {
     private Drinks _randomCocktails = new();
+    private bool _showLoading = true;
 
     protected override async Task OnInitializedAsync()
     {
         _service.OnSearchPerformed += HandleSearch;
         _service.OnRandomSearchPerformed += HandleRandom;
+        _service.OnSearchStarted += SearchStarted;
 
         var result = await _service.GetRandomDrinks(3);
         if (result.IsError)
@@ -100,18 +129,19 @@ else
         {
             _randomCocktails = result.Value;
         }
+
+        _showLoading = false;
     }
 
     private void HandleSearch()
     {
+        _showLoading = false;
+        StateHasChanged();
+
         if (!string.IsNullOrEmpty(_service.SearchError))
         {
             _snack.Add(_service.SearchError, Severity.Warning);
-        }
-        else
-        {
-            StateHasChanged();
-        }     
+        }      
     }
 
     private async Task PerformRandomSearch()
@@ -121,29 +151,36 @@ else
 
     private void HandleRandom()
     {
+        _showLoading = false;
+        StateHasChanged();
+
         if (!string.IsNullOrEmpty(_service.SearchError))
         {
             _snack.Add(_service.SearchError, Severity.Warning);
         }
         else
         {
-            HandleDialog(_service.RandomCocktail);            
+            HandleDialog(_service.CurrentCocktail);            
         }
     }
 
-    private async Task HandleDialog(Drink drink)
+    private void SearchStarted()
     {
-        var result = await _service.GetDrink(drink.idDrink);
-        if (result.IsError)
-        {
-            _snack.Add(result.FirstError.Description, Severity.Error);
-            return;
-        }
-        
+        _showLoading = true;
+        StateHasChanged();
+    }
+
+    private async Task HandleGetDrink(string drinkId)
+    {
+        await _service.PerformÇocktailGet(drinkId);
+    }
+
+    private void HandleDialog(Drink drink)
+    {
         var parameters = new DialogParameters();
-        parameters.Add("Drink", result.Value);
+        parameters.Add("Drink", drink);
         var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
-        _dialogService.Show<CocktailDialog>(result.Value.strDrink, parameters, options);
+        _dialogService.Show<CocktailDialog>(drink.strDrink, parameters, options);
     }
 
     private async Task HandleIngredient(string ingredient)
@@ -165,5 +202,6 @@ else
     {
         _service.OnSearchPerformed -= HandleSearch;
         _service.OnRandomSearchPerformed -= HandleRandom;
+        _service.OnSearchStarted -= SearchStarted;
     }
 }
