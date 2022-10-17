@@ -7,53 +7,95 @@
 <MudDialogProvider />
 <MudSnackbarProvider />
 <MudLayout>
-    <MudAppBar Elevation="1" Fixed="true" Dense="true" Color="Color.Inherit">
+    <MudBreakpointProvider>
+    <MudAppBar Elevation="1" Fixed="true" Dense="true" Color="Color.Inherit"> 
         <MudIcon Class="cursor-pointer" Icon="@Icons.Material.Rounded.Home" Color="Color.Inherit" Title="Cocktail Mate" @onclick="HandleHome" />
         <MudTextField T="string" DebounceInterval="500" Variant="Variant.Outlined" Adornment="Adornment.End" Style="height: 32px; color: white"
             AdornmentIcon="@Icons.Filled.Search" IconSize="Size.Small"  InputMode="InputMode.search" Class="ml-5 mb-2" AdornmentColor="Color.Inherit" 
             Placeholder="Search" OnAdornmentClick="HandleSearch" @bind-Value="_searchTerm" Immediate="true"/>
         <MudSpacer />
-        <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Rounded.QuestionAnswer" OnClick="HandleRandom" Color="Color.Inherit">Random</MudButton>
-        <MudMenu Label="Categories" MaxHeight="600" StartIcon="@Icons.Material.Rounded.Collections" Color="Color.Inherit">
-            @foreach (var category in _service.CategoriesList?.drinks.OrderBy(x => x.strCategory))
-            {
-                <MudMenuItem @onclick="@(() => HandleFilter("c", category.strCategory))">@category.strCategory</MudMenuItem>
-            }
-        </MudMenu>
-        <MudMenu Label="Ingredients" MaxHeight="600" StartIcon="@Icons.Material.Rounded.Blender" Color="Color.Inherit">
-            @foreach (var ingredient in _service.IngredientsList?.drinks.OrderBy(x => x.strIngredient1))
-            {
-                <MudMenuItem @onclick="@(() => HandleFilter("i", ingredient.strIngredient1))">@ingredient.strIngredient1</MudMenuItem>
-            }
-        </MudMenu>
-        <MudMenu Label="Glasses" MaxHeight="600" StartIcon="@Icons.Material.Rounded.LocalDrink" Color="Color.Inherit">
-            @foreach (var glass in _service.GlassesList?.drinks.OrderBy(x => x.strGlass))
-            {
-                <MudMenuItem @onclick="@(() => HandleFilter("g", glass.strGlass))">@glass.strGlass</MudMenuItem>
-            }
-        </MudMenu>
-        <MudIconButton @onclick="ToggleDarkMode" Color="Color.Inherit" Icon="@_modeIcon" Title="@_modeTitle"/>
+        <MudHidden Breakpoint="Breakpoint.MdAndUp" Invert="true">
+            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Rounded.QuestionAnswer" OnClick="HandleRandom" Color="Color.Inherit">Random</MudButton>
+            <MudMenu Label="Categories" MaxHeight="600" StartIcon="@Icons.Material.Rounded.Collections" Color="Color.Inherit">
+                @foreach (var category in _service.CategoriesList?.drinks.OrderBy(x => x.strCategory))
+                {
+                    <MudMenuItem @onclick="@(() => HandleFilter("c", category.strCategory))">@category.strCategory</MudMenuItem>
+                }
+            </MudMenu>
+            <MudMenu Label="Ingredients" MaxHeight="600" StartIcon="@Icons.Material.Rounded.Blender" Color="Color.Inherit">
+                @foreach (var ingredient in _service.IngredientsList?.drinks.OrderBy(x => x.strIngredient1))
+                {
+                    <MudMenuItem @onclick="@(() => HandleFilter("i", ingredient.strIngredient1))">@ingredient.strIngredient1</MudMenuItem>
+                }
+            </MudMenu>
+            <MudMenu Label="Glasses" MaxHeight="600" StartIcon="@Icons.Material.Rounded.LocalDrink" Color="Color.Inherit">
+                @foreach (var glass in _service.GlassesList?.drinks.OrderBy(x => x.strGlass))
+                {
+                    <MudMenuItem @onclick="@(() => HandleFilter("g", glass.strGlass))">@glass.strGlass</MudMenuItem>
+                }
+            </MudMenu>
+            <MudIconButton @onclick="ToggleDarkMode" Color="Color.Inherit" Icon="@_modeIcon" Title="@_modeTitle"/>
+        </MudHidden>
+        <MudHidden Breakpoint="Breakpoint.MdAndUp" Invert="false">
+                <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer" />
+        </MudHidden>
     </MudAppBar>
+        <MudDrawer @bind-Open="@_drawerOpen" Elevation="1" Anchor="Anchor.Right">
+            <MudNavMenu>
+                <MudNavLink Icon="@Icons.Material.Rounded.QuestionAnswer" OnClick="HandleRandom">Random</MudNavLink>
+                <MudNavGroup Title="Categories" Icon="@Icons.Material.Rounded.Collections">
+                    @foreach (var category in _service.CategoriesList?.drinks.OrderBy(x => x.strCategory))
+                    {
+                        <MudNavLink @onclick="@(() => HandleFilter("c", category.strCategory))">@category.strCategory</MudNavLink>
+                    }
+                </MudNavGroup>
+                <MudNavGroup Title="Ingredients" Icon="@Icons.Material.Rounded.Blender">
+                    @foreach (var ingredient in _service.IngredientsList?.drinks.OrderBy(x => x.strIngredient1))
+                    {
+                        <MudNavLink @onclick="@(() => HandleFilter("i", ingredient.strIngredient1))">@ingredient.strIngredient1</MudNavLink>
+                    }
+                </MudNavGroup>
+                <MudNavGroup Title="Glasses" Icon="@Icons.Material.Rounded.LocalDrink">
+                    @foreach (var glass in _service.GlassesList?.drinks.OrderBy(x => x.strGlass))
+                    {
+                        <MudNavLink @onclick="@(() => HandleFilter("g", glass.strGlass))">@glass.strGlass</MudNavLink>
+                    }
+                </MudNavGroup>
+                <MudNavLink Icon="@_modeIcon" OnClick="ToggleDarkMode">@_modeTitle</MudNavLink>
+            </MudNavMenu>
+        </MudDrawer>
     <MudMainContent>
         <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4 pt-4 mb-8 pb-8" >
             @Body
         </MudContainer>
     </MudMainContent>
-    <MudAppBar Elevation="1" Dense="true" Color="Color.Inherit" Bottom="true">
-        <MudIcon Icon="@Icons.Material.Rounded.FilterAlt" Color="Color.Inherit" Title="Browse by Letter" />
-        @foreach (var letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray())
-        {
-            <MudChip OnClick="(()=> HandleLetter(letter))" Color="Color.Primary">@letter</MudChip>
-        }
+    <MudAppBar Elevation="1" Dense="true" Color="Color.Inherit" Bottom="true" Fixed="true">
+        <MudHidden Breakpoint="Breakpoint.MdAndUp" Invert="true">
+            <MudIcon Icon="@Icons.Material.Rounded.FilterAlt" Color="Color.Inherit" Title="Browse by Letter" />
+            @foreach (var letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray())
+            {
+                <MudChip OnClick="(()=> HandleLetter(letter))" Color="Color.Primary">@letter</MudChip>
+            }
+        </MudHidden>
+        <MudHidden Breakpoint="Breakpoint.MdAndUp" Invert="false">
+            <MudMenu Label="Browse by Letter" MaxHeight="600" StartIcon="@Icons.Material.Rounded.FilterAlt" Color="Color.Inherit">
+                @foreach (var letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray())
+                {
+                    <MudMenuItem @onclick="@(() => HandleLetter(letter))">@letter</MudMenuItem>
+                }
+            </MudMenu>
+        </MudHidden>
         <MudSpacer />
         <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Edge="Edge.End" Title="Developed by Sam Moretta" Href="https://github.com/CrocodileDilemma" Target="_blank" />
     </MudAppBar>
+    </MudBreakpointProvider>
 </MudLayout>
 
 @code {
     private string _modeIcon => _darkMode ? Icons.Rounded.DarkMode : @Icons.Rounded.LightMode;
     private string _modeTitle => _darkMode ? "Switch to Light Mode" : "Switch to Dark Mode";
     private bool _darkMode = false;
+    private bool _drawerOpen = false;
     private string _searchTerm = string.Empty;
     private MudTheme _theme = new MudTheme()
     {
@@ -85,6 +127,11 @@
     private void ToggleDarkMode()
     {
         _darkMode = !_darkMode;
+    }
+
+    private void ToggleDrawer()
+    {
+        _drawerOpen = !_drawerOpen;
     }
 
     private async Task HandleSearch()
