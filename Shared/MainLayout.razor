@@ -35,11 +35,11 @@
         <MudIconButton @onclick="ToggleDarkMode" Color="Color.Inherit" Icon="@_modeIcon" Title="@_modeTitle"/>
     </MudAppBar>
     <MudMainContent>
-        <MudContainer MaxWidth="MaxWidth.Large" Class="my-4 pt-4">
+        <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4 pt-4 mb-8 pb-8" >
             @Body
         </MudContainer>
     </MudMainContent>
-    <MudAppBar Elevation="1" Fixed="true" Dense="true" Color="Color.Inherit" Bottom="true">
+    <MudAppBar Elevation="1" Dense="true" Color="Color.Inherit" Bottom="true">
         <MudIcon Icon="@Icons.Material.Rounded.FilterAlt" Color="Color.Inherit" Title="Browse by Letter" />
         @foreach (var letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray())
         {

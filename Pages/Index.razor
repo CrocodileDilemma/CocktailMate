@@ -67,7 +67,7 @@ else
             <MudCarouselItem Transition="Transition.Slide" Color="@Color.Dark">
             <div class="d-flex" style="height:100%">
                 <div class="d-flex justify-center">
-                    <MudImage Src="@drink.strDrinkThumb" Height="250" ObjectFit="ObjectFit.Cover" ObjectPosition="ObjectPosition.Bottom" />
+                    <MudImage Src="@drink.strDrinkThumb" Height="250" ObjectFit="ObjectFit.Cover" ObjectPosition="ObjectPosition.Bottom" Fluid="true" />
                     <MudGrid Class="ml-4 mt-1">
                         <MudItem>
                             <MudText Typo="Typo.h6" @onclick="@(()=> HandleDialog(drink))" Class="mb-1 cursor-pointer">@drink.strDrink</MudText>
