@@ -8,7 +8,7 @@
 <PageTitle>Cocktail Mate</PageTitle>
 <MudText Typo="Typo.h3" GutterBottom="true" Align="Align.Center">Welcome to Cocktail Mate!</MudText>
 <MudText Class="mb-8" Align="Align.Center">Fancy a tipple? Search for a cocktail, use one of the filters, or 
-    <MudLink @onclick="HandleRandom" Class="cursor-pointer">choose one at random</MudLink>
+    <MudLink @onclick="PerformRandomSearch" Class="cursor-pointer">choose one at random</MudLink>
 </MudText>
 
 @if (_service?.CocktailSearch?.drinks?.Any() is true)
@@ -17,7 +17,7 @@
         @foreach (var drink in _service.CocktailSearch?.drinks)
         {
             <MudItem xs="6">
-                <MudCard>
+                <MudCard @onclick="@(()=> HandleDialog(drink))" Class="cursor-pointer">
                     <MudCardHeader>
                         <CardHeaderAvatar>
                             <MudAvatar Color="Color.Primary">@drink.strDrink.Substring(0,1).ToUpper()</MudAvatar>
@@ -25,10 +25,6 @@
                         <CardHeaderContent>
                             <MudText Typo="Typo.body1">@drink.strDrink</MudText>
                         </CardHeaderContent>
-                        <CardHeaderActions>
-                                <MudIconButton Icon="@Icons.Material.Filled.QuestionMark" Color="Color.Default" 
-                                OnClick="@(() => HandleDialog(drink))" Title="How do I make this?" />
-                        </CardHeaderActions>
                     </MudCardHeader>
                     <MudCardMedia Image="@drink.strDrinkThumb" Height="250" />
                 </MudCard>
@@ -38,44 +34,62 @@
 }
 else
 {
-    <MudCarousel Class="mud-width-full" Style="height:200px;" ShowArrows="true" EnableSwipeGesture="@true" AutoCycle="@true" TData="Drink">
-        @foreach (var drink in _randomCocktails?.drinks)
-        {
-            <MudCarouselItem Transition="Transition.Slide" Color="@Color.Primary">
-                <div class="d-flex" style="height:100%">
-                    <div class="d-flex justify-center">
-                        <MudImage ObjectFit="ObjectFit.Cover" Height="200" Width="400" Src="@drink.strDrinkThumb"
-                          Alt=@drink.strDrink Elevation="25" Class="rounded-lg" />
-                        <MudText Align="@Align.Center" Class="mx-auto">@drink.strDrink</MudText>
-                    </div>
+    <MudCarousel Class="mud-width-full mb-10" Style="height:200px;" ShowArrows="true" EnableSwipeGesture="@true" AutoCycle="@true" TData="Drink" ShowBullets="false">
+    @foreach (var drink in _randomCocktails?.drinks)
+    {
+            <MudCarouselItem Transition="Transition.Slide" Color="@Color.Dark">
+            <div class="d-flex" style="height:100%">
+                <div class="d-flex justify-center">
+                    <MudImage Src="@drink.strDrinkThumb" Height="250" ObjectFit="ObjectFit.Cover" ObjectPosition="ObjectPosition.Bottom" />
+                    <MudGrid Class="ml-4 mt-1">
+                        <MudItem>
+                            <MudText Typo="Typo.h6" @onclick="@(()=> HandleDialog(drink))" Class="mb-1 cursor-pointer">@drink.strDrink</MudText>
+                            <ChipContent Drink=@drink />
+                            <MudText Typo="Typo.subtitle1">Ingredients</MudText>
+                            @foreach (var i in _service.GetIngredients(drink))
+                            {
+                                <MudChip Icon="@Icons.Material.Filled.Info" Color="Color.Secondary" OnClick="@(() => HandleIngredient(i.Key))">@_service.GetIngredientText(i)</MudChip>
+                            }
+                        </MudItem>
+                    </MudGrid>
                 </div>
-            </MudCarouselItem>
-        }
+            </div>
+        </MudCarouselItem>
+    }
     </MudCarousel>
-
-    <MudCarousel Class="mud-width-full" Style="height:200px;" ShowArrows="true" EnableSwipeGesture="@true" AutoCycle="@true" TData="Ingredient">
-        @foreach (var ingredient in _randomIngredients)
-        {
-            <MudCarouselItem Transition="Transition.Slide" Color="@Color.Primary">
-                <div class="d-flex" style="height:100%">
-                    <div class="d-flex justify-center">
-                        <MudImage ObjectFit="ObjectFit.Cover" Height="200" Width="400" Src="@_service.GetIngredientImage(ingredient)"
-                          Alt=@ingredient Elevation="25" Class="rounded-lg" />
-                        <MudText Align="@Align.Center" Class="mx-auto">@ingredient</MudText>
-                    </div>
-                </div>
-            </MudCarouselItem>
-        }
-    </MudCarousel>
+    <MudPaper Class="mud-width-full" Outlined="true">
+        <MudAlert Severity="Severity.Info">
+            This web application was built for demonstration purposes only.<br>
+                Cocktail data is sourced exclusively from
+            <MudElement HtmlTag="a"
+                    Class="ma-0"
+                    Style="color:orangered;font-weight:bold;"
+                    href="https://www.thecocktaildb.com/"
+                    target="blank"
+                    rel="noopener noreferrer">
+                TheCocktailDB,
+            </MudElement>
+                an open, crowd-sourced database of drinks and cocktails from around the world.<br>
+            Please check them out and support their awesome content.<br>
+            This application was build using 
+            <MudElement HtmlTag="a"
+                Class="ma-0"
+                Style="color:mediumpurple;font-weight:bold;"
+                href="https://mudblazor.com/"
+                target="blank"
+                rel="noopener noreferrer">
+                Mud Blazor.
+            </MudElement><br>
+        </MudAlert>
+    </MudPaper>
 }
-
 @code {
     private Drinks _randomCocktails = new();
-    private List<string> _randomIngredients = new();
 
     protected override async Task OnInitializedAsync()
     {
         _service.OnSearchPerformed += HandleSearch;
+        _service.OnRandomSearchPerformed += HandleRandom;
 
         var result = await _service.GetRandomDrinks(3);
         if (result.IsError)
@@ -86,8 +100,6 @@ else
         {
             _randomCocktails = result.Value;
         }
-
-        _randomIngredients = _service.GetRandomIngredients(3);
     }
 
     private void HandleSearch()
@@ -102,16 +114,20 @@ else
         }     
     }
 
-    private async Task HandleRandom()
+    private async Task PerformRandomSearch()
     {
-        var result = await _service.GetRandomDrinks(1);
-        if (result.IsError)
+        await _service.PerformRandomSearch();
+    }
+
+    private void HandleRandom()
+    {
+        if (!string.IsNullOrEmpty(_service.SearchError))
         {
-            _snack.Add("Could not load Random Cocktail", Severity.Warning);
+            _snack.Add(_service.SearchError, Severity.Warning);
         }
         else
         {
-            HandleDialog(result.Value.drinks.First());            
+            HandleDialog(_service.RandomCocktail);            
         }
     }
 
@@ -130,8 +146,24 @@ else
         _dialogService.Show<CocktailDialog>(result.Value.strDrink, parameters, options);
     }
 
+    private async Task HandleIngredient(string ingredient)
+    {
+        var result = await _service.GetIngredient(ingredient);
+        if (result.IsError)
+        {
+            _snack.Add(result.FirstError.Description, Severity.Error);
+            return;
+        }
+
+        var parameters = new DialogParameters();
+        parameters.Add("Ingredient", result.Value);
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
+        _dialogService.Show<IngredientDialog>(result.Value.strIngredient, parameters, options);
+    }
+
     void IDisposable.Dispose()
     {
         _service.OnSearchPerformed -= HandleSearch;
+        _service.OnRandomSearchPerformed -= HandleRandom;
     }
 }

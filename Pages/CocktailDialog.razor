@@ -17,11 +17,12 @@
                         <MudImage Src="@drink.strDrinkThumb" Height="200" ObjectFit="ObjectFit.Cover" Class="rounded-lg" ObjectPosition="ObjectPosition.Bottom"/>
                     </MudItem>
                     <MudItem xs="9">
+                        <MudText Typo="Typo.subtitle1">Info</MudText>
                         <ChipContent Drink=@drink />
                         <MudText Typo="Typo.subtitle1">Ingredients</MudText>
                         @foreach (var i in ingredients)
                         {
-                            <MudChip Icon="@Icons.Material.Filled.Info" Color="Color.Secondary" OnClick="@(() => HandleIngredient(i.Key))">@GetIngredient(i)</MudChip>
+                            <MudChip Icon="@Icons.Material.Filled.Info" Color="Color.Secondary" OnClick="@(() => HandleIngredient(i.Key))">@_service.GetIngredientText(i)</MudChip>
                         }
                     </MudItem>
                 </MudGrid>
@@ -40,26 +41,7 @@
 
     protected override void OnParametersSet()
     {
-        for (int i = 1; i <= 15; i++) 
-        {
-            var ingredient = drink.GetType().GetProperty($"strIngredient{i}").GetValue(drink, null);
-            var measure = drink.GetType().GetProperty($"strMeasure{i}").GetValue(drink, null);
-
-            if (ingredient is not null)
-            {
-                ingredients.Add(ingredient.ToString(), measure?.ToString());
-            }
-            else
-            {
-                break;
-            }
-        }
-    }
-
-    private string GetIngredient(KeyValuePair<string, string> ingredient)
-    {
-        return string.IsNullOrEmpty(ingredient.Value) ? ingredient.Key :
-            $"{ingredient.Value} {ingredient.Key}";
+        ingredients = _service.GetIngredients(drink);
     }
 
     private async Task HandleIngredient(string ingredient)

@@ -1,5 +1,4 @@
-﻿<MudText Typo="Typo.subtitle1">Info</MudText>
-@if (!string.IsNullOrEmpty(drink.strCategory))
+﻿@if (!string.IsNullOrEmpty(drink.strCategory))
 {
     <MudChip DisableRipple="true" Color="Color.Primary">@drink.strCategory</MudChip>
 }
@@ -28,7 +27,7 @@
 }
 @if (!string.IsNullOrEmpty(drink.strVideo))
 {
-    <MudChip Href="@drink.strVideo" Target="blank" Color="Color.Surface">Watch Vide</MudChip>
+    <MudChip Href="@drink.strVideo" Target="blank" Color="Color.Tertiary" Class="cursor-pointer" Icon="@Icons.Custom.Brands.YouTube">Watch</MudChip>
 }
 
 @code {

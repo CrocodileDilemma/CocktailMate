@@ -12,6 +12,8 @@ namespace UltimateCocktails.Services
         public Drinks IngredientsList = new();
         public Drinks GlassesList = new();
         public Drinks CategoriesList = new();
+        public Drink RandomCocktail = new();
+
         public string SearchError { get; set; } = string.Empty;
         private readonly HttpClient _httpClient;
 
@@ -21,8 +23,9 @@ namespace UltimateCocktails.Services
         }
 
         public event Action OnSearchPerformed;
-        public event Action OnShowSpinner;
-        public event Action OnHideSpinner;
+        public event Action OnRandomSearchPerformed;
+        //public event Action OnShowSpinner;
+        //public event Action OnHideSpinner;
 
         public async Task PerformSearch(string searchQuery)
         {
@@ -46,16 +49,41 @@ namespace UltimateCocktails.Services
                 SearchError = ex.Message;
             }
 
-            NotifyStateChanged();
+            OnSearchPerformed?.Invoke();
         }
 
-        public async Task PerformFilter(string filterBy, string filterValue)
+        public async Task PerformRandomSearch()
+        {
+            SearchError = string.Empty;
+
+            try
+            {
+                var result = await this.GetRandomDrinks(1);
+
+                if (result.IsError)
+                {
+                    SearchError = result.FirstError.Description;
+                }
+                else
+                {
+                    RandomCocktail = result.Value.drinks.FirstOrDefault();
+                }
+            }
+            catch (Exception ex)
+            {
+                SearchError = ex.Message;
+            }
+
+            OnRandomSearchPerformed?.Invoke();
+        }
+
+        public async Task PerformFilter(string filterBy, string filterValue, string endpoint = "filter")
         {
             SearchError = string.Empty;
             
             try
             {
-                var result = await _httpClient.GetFromJsonAsync<Drinks>($"filter.php?{ filterBy }={ filterValue }");
+                var result = await _httpClient.GetFromJsonAsync<Drinks>($"{ endpoint }.php?{ filterBy }={ filterValue }");
                 if (result?.drinks?.Any() is not true)
                 {
                     SearchError = $"No { filterValue } Cocktails were found!";
@@ -70,7 +98,7 @@ namespace UltimateCocktails.Services
                 SearchError = ex.Message;
             }
 
-            NotifyStateChanged();
+            OnSearchPerformed?.Invoke();
         }
 
         public async Task<ErrorOr<Drinks>> GetRandomDrinks(int count)
@@ -148,7 +176,6 @@ namespace UltimateCocktails.Services
                 return Error.Failure(description: ex.Message);
             }
         }
-
         public async Task<ErrorOr<Ingredient>> GetIngredient(string ingredient)
         {
             try
@@ -172,6 +199,38 @@ namespace UltimateCocktails.Services
             return $"https://www.thecocktaildb.com/images/ingredients/{ingredient}-Medium.png";
         }
 
-        private void NotifyStateChanged() => OnSearchPerformed?.Invoke();
+        public void ResetIndexPage()
+        {
+            SearchError = string.Empty;
+            CocktailSearch = new();
+            OnSearchPerformed?.Invoke();
+        }
+
+        public Dictionary<string, string> GetIngredients(Drink drink)
+        {
+            Dictionary<string, string> result = new();
+
+            for (int i = 1; i <= 15; i++)
+            {
+                var ingredient = drink.GetType().GetProperty($"strIngredient{i}").GetValue(drink, null);
+                var measure = drink.GetType().GetProperty($"strMeasure{i}").GetValue(drink, null);
+
+                if (ingredient is not null)
+                {
+                    result.Add(ingredient.ToString(), measure?.ToString());
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            return result;
+        }
+        public string GetIngredientText(KeyValuePair<string, string> ingredient)
+        {
+            return string.IsNullOrEmpty(ingredient.Value) ? ingredient.Key :
+                $"{ingredient.Value} {ingredient.Key}";
+        }
     }
 }
