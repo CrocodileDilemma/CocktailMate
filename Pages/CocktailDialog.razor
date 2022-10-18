@@ -21,14 +21,12 @@
                         <MudText Typo="Typo.subtitle1">Information</MudText>
                         <ChipContent Drink=@drink />
                         <MudText Typo="Typo.subtitle1">Ingredients</MudText>
-                        <MudHidden Breakpoint="Breakpoint.MdAndUp" Invert="false">
-                            <MudChipSet>
-                            @foreach (var i in ingredients)
-                            {
-                                <MudChip Icon="@Icons.Material.Filled.Info" Color="Color.Secondary" OnClick="@(() => HandleIngredient(i.Key))">@_service.GetIngredientText(i)</MudChip>
-                            }
-                            </MudChipSet>
-                        </MudHidden>
+                        <MudChipSet>
+                        @foreach (var i in ingredients)
+                        {
+                            <MudChip Icon="@Icons.Material.Filled.Info" Color="Color.Secondary" OnClick="@(() => HandleIngredient(i.Key))">@_service.GetIngredientText(i)</MudChip>
+                        }
+                        </MudChipSet>
                     </MudItem>
                 </MudGrid>
                 <MudText Typo="Typo.subtitle1">Instructions</MudText>
