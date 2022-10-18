@@ -37,7 +37,7 @@
             <MudIconButton @onclick="ToggleDarkMode" Color="Color.Inherit" Icon="@_modeIcon" Title="@_modeTitle"/>
         </MudHidden>
         <MudHidden Breakpoint="Breakpoint.MdAndUp" Invert="false">
-                <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" OnClick="@ToggleDrawer" />
+                <MudIconButton @onclick="ToggleDrawer" Color="Color.Inherit" Icon="@Icons.Material.Filled.Menu" Edge="Edge.End" />
         </MudHidden>
     </MudAppBar>
         <MudDrawer @bind-Open="@_drawerOpen" Elevation="1" Anchor="Anchor.Right">
@@ -78,10 +78,11 @@
             }
         </MudHidden>
         <MudHidden Breakpoint="Breakpoint.MdAndUp" Invert="false">
-            <MudMenu Label="Browse by Letter" MaxHeight="600" StartIcon="@Icons.Material.Rounded.FilterAlt" Color="Color.Inherit" FullWidth="true"> 
+            <MudMenu Label="Browse by Letter" MaxHeight="600" StartIcon="@Icons.Material.Rounded.FilterAlt" Color="Color.Inherit"
+                FullWidth="true" AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft">
                 @foreach (var letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray())
                 {
-                    <MudMenuItem @onclick="@(() => HandleLetter(letter))">@letter</MudMenuItem>
+                    <MudMenuItem @onclick="@(() => HandleLetter(letter))">@($"  { letter }")</MudMenuItem>
                 }
             </MudMenu>
         </MudHidden>
