@@ -1,4 +1,4 @@
-# UltimateCocktails
+# CocktailMate
 
 A cocktail recipe website, built with Blazor Web Assembly. 
 
