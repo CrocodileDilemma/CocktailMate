@@ -6,3 +6,5 @@ A material design theme using the MudBlazor library, incorporating modern compon
 chips, a snackbar, and carousel.
 
 Leverages the CockatilDB, an open, crowd-sourced API.
+
+https://cocktailmate.azurewebsites.net/
