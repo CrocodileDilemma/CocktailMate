@@ -72,7 +72,7 @@
     <MudAppBar Elevation="1" Dense="true" Color="Color.Inherit" Bottom="true" Fixed="true">
         <MudHidden Breakpoint="Breakpoint.MdAndUp" Invert="true">
             <MudIcon Icon="@Icons.Material.Rounded.FilterAlt" Color="Color.Inherit" Title="Browse by Letter" />
-            @foreach (var letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray())
+            @foreach (var letter in _alphabet.ToCharArray())
             {
                 <MudChip OnClick="(()=> HandleLetter(letter))" Color="Color.Primary">@letter</MudChip>
             }
@@ -80,7 +80,7 @@
         <MudHidden Breakpoint="Breakpoint.MdAndUp" Invert="false">
             <MudMenu Label="Browse by Letter" MaxHeight="600" StartIcon="@Icons.Material.Rounded.FilterAlt" Color="Color.Inherit"
                 FullWidth="true" AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft">
-                @foreach (var letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray())
+                @foreach (var letter in _alphabet.ToCharArray())
                 {
                     <MudMenuItem @onclick="@(() => HandleLetter(letter))">@($"  { letter }")</MudMenuItem>
                 }
@@ -98,6 +98,7 @@
     private bool _darkMode = false;
     private bool _drawerOpen = false;
     private string _searchTerm = string.Empty;
+    private string _alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     private MudTheme _theme = new MudTheme()
     {
         Typography = new Typography()
